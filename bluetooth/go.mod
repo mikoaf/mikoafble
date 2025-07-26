@@ -1,4 +1,5 @@
-module nbable
+// module nbable
+module github.com/mikoaf/mikoafble/bluetooth
 
 go 1.24.4
 
