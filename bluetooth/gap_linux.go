@@ -95,7 +95,7 @@ func (a *Advertisement) Configure(options AdvertisementOptions) error {
 	}
 
 	id := atomic.AddUint64(&advertisementID, 1)
-	a.path = dbus.ObjectPath(fmt.Sprintf("/org/tinygo/bluetooth/advertisement%d", id))
+	a.path = dbus.ObjectPath(fmt.Sprintf("/org/nbable/bluetooth/advertisement%d", id))
 	propsSpec := map[string]map[string]*prop.Prop{
 		"org.bluez.LEAdvertisement1": {
 			"Type":             {Value: "broadcast"},

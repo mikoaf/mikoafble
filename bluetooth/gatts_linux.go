@@ -43,7 +43,7 @@ func (om *objectManager) GetManagedObjects() (map[dbus.ObjectPath]map[string]map
 
 func (a *Adapter) AddService(s *Service) error {
 	id := atomic.AddUint64(&serviceID, 1)
-	path := dbus.ObjectPath(fmt.Sprintf("/org/tinygo/bluetooth/service%d", id))
+	path := dbus.ObjectPath(fmt.Sprintf("/org/nbable/bluetooth/service%d", id))
 
 	objects := map[dbus.ObjectPath]map[string]map[string]*prop.Prop{}
 
