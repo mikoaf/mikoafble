@@ -8,13 +8,18 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"mikoafble/bluetooth"
 )
 
 var adapter = bluetooth.DefaultAdapter
 
-var notifyChar bluetooth.Characteristic
+var notifyChar bluetooth.Characteristic //notify characteristic
+
+var connectedDevices = make(map[bluetooth.Connection]bluetooth.Device)
 
 func callAPI(path string, payload interface{}) ([]byte, error) {
 	var resp *http.Response
@@ -98,7 +103,32 @@ func setupPeripheral() error {
 	log.Println("Advertising...")
 	// address, _ := adapter.Address()
 	// fmt.Println(address)
-	<-context.Background().Done()
+	// <-context.Background().Done()
+	// adv.Stop()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigChan
+		log.Printf("Received signal: %v. Initiating shutdown...", sig)
+		cancel()
+	}()
+
+	<-ctx.Done()
+	log.Println("Shutting down BLE services")
+	log.Println("Stopping advertisement...")
+	if err := adv.Stop(); err != nil {
+		log.Printf("Error stopping advertisement: %v\n", err)
+	}
+
+	log.Println("Advertisement stopped")
+	log.Println("Disconnecting any active client connections...")
+	for connID, dev := range connectedDevices {
+		dev.Disconnect()
+		delete(connectedDevices, connID)
+	}
 	return nil
 }
 

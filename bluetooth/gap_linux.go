@@ -246,6 +246,16 @@ func (a *Advertisement) Stop() error {
 	return nil
 }
 
+func (d Device) Disconnect() error {
+	if d.adapter.connectHandler != nil {
+		d.adapter.connectHandler(d, false)
+	}
+
+	// we don't call our cancel function here, instead we wait for the
+	// property change in `watchForConnect` and cancel things then
+	return d.device.Call("org.bluez.Device1.Disconnect", 0).Err
+}
+
 func (d *Device) parseProperties(props *map[string]dbus.Variant) error {
 	for prop, v := range *props {
 		switch prop {
