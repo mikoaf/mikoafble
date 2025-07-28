@@ -1,4 +1,4 @@
-package nbable
+package bluetooth
 
 import (
 	"fmt"
@@ -25,9 +25,25 @@ type objectManager struct {
 	objects map[dbus.ObjectPath]map[string]map[string]*prop.Prop
 }
 
+func (om *objectManager) GetManagedObjects() (map[dbus.ObjectPath]map[string]map[string]dbus.Variant, *dbus.Error) {
+	objects := map[dbus.ObjectPath]map[string]map[string]dbus.Variant{}
+	for path, object := range om.objects {
+		obj := make(map[string]map[string]dbus.Variant)
+		objects[path] = obj
+		for iface, props := range object {
+			ifaceObj := make(map[string]dbus.Variant)
+			obj[iface] = ifaceObj
+			for k, v := range props {
+				ifaceObj[k] = dbus.MakeVariant(v.Value)
+			}
+		}
+	}
+	return objects, nil
+}
+
 func (a *Adapter) AddService(s *Service) error {
 	id := atomic.AddUint64(&serviceID, 1)
-	path := dbus.ObjectPath(fmt.Sprintf("/nbable/service%d", id))
+	path := dbus.ObjectPath(fmt.Sprintf("/org/nbable/bluetooth/service%d", id))
 
 	objects := map[dbus.ObjectPath]map[string]map[string]*prop.Prop{}
 
@@ -39,7 +55,7 @@ func (a *Adapter) AddService(s *Service) error {
 	}
 	objects[path] = serviceSpec
 
-	for i, char := range s.Characteristic {
+	for i, char := range s.Characteristics {
 		bluzCharFlags := []string{
 			"broadcast",              //bit 0
 			"read",                   //bit 1
@@ -90,7 +106,7 @@ func (a *Adapter) AddService(s *Service) error {
 	om := &objectManager{
 		objects: objects,
 	}
-	err := a.bus.Export(om, path, "org.freedesktop.DBUS.ObjectManager")
+	err := a.bus.Export(om, path, "org.freedesktop.DBus.ObjectManager")
 	if err != nil {
 		return err
 	}
@@ -110,4 +126,18 @@ func (c *Characteristic) Write(p []byte) (n int, err error) {
 		return 0, err
 	}
 	return len(p), nil
+}
+
+func (c *blueZChar) ReadValue(options map[string]dbus.Variant) ([]byte, *dbus.Error) {
+	value := c.props.GetMust("org.bluez.GattCharacteristic1", "Value").([]byte)
+	return value, nil
+}
+
+func (c *blueZChar) WriteValue(value []byte, options map[string]dbus.Variant) *dbus.Error {
+	if c.writeEvent != nil {
+		client := Connection(0)
+		offset, _ := options["offset"].Value().(uint16)
+		c.writeEvent(client, int(offset), value)
+	}
+	return nil
 }

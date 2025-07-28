@@ -1,11 +1,11 @@
-package nbable
+package bluetooth
 
 type CharacteristicPermissions uint8
 
 type Service struct {
 	handle uint16
 	UUID
-	Characteristic []CharacteristicConfig
+	Characteristics []CharacteristicConfig
 }
 
 type WriteEvent = func(client Connection, offset int, value []byte)

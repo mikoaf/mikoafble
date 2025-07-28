@@ -1,4 +1,4 @@
-package nbable
+package bluetooth
 
 import "unsafe"
 
