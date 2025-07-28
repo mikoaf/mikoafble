@@ -41,7 +41,7 @@ func (a *Adapter) Enable() (err error) {
 	a.adapter = a.bus.Object("org.bluez", dbus.ObjectPath("/org/bluez/"+a.id))
 	fmt.Println("Adapter path:", a.adapter.Path())
 	addr, err := a.adapter.GetProperty("org.bluez.Adapter1.Address")
-	fmt.Println(addr)
+	// fmt.Println(addr)
 	if err != nil {
 		if err, ok := err.(dbus.Error); ok && err.Name == "org.freedesktop.DBus.Error.UnknownObject" {
 			return fmt.Errorf("bluetooth: adapter %s does not exist", a.adapter.Path())

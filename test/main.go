@@ -96,8 +96,8 @@ func setupPeripheral() error {
 	}
 
 	log.Println("Advertising...")
-	address, _ := adapter.Address()
-	fmt.Println(address)
+	// address, _ := adapter.Address()
+	// fmt.Println(address)
 	<-context.Background().Done()
 	return nil
 }
