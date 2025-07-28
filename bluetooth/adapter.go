@@ -30,6 +30,10 @@ func NewAdapter(id string) *Adapter {
 
 var DefaultAdapter = NewAdapter(defaultAdapter)
 
+func (a *Adapter) SetConnectionHandler(handler func(device Device, connected bool)) {
+	a.connectHandler = handler
+}
+
 func (a *Adapter) Enable() (err error) {
 	bus, err := dbus.SystemBus()
 	if err != nil {

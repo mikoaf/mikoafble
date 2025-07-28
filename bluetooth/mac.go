@@ -1,10 +1,15 @@
 package bluetooth
 
-import "errors"
+import (
+	"errors"
+	"unsafe"
+)
 
 type MAC [6]byte
 
 var ErrInvalidMAC = errors.New("bluetooth: failed to parse MAC address")
+
+const hexDigit = "0123456789ABCDEF"
 
 func ParseMAC(s string) (mac MAC, err error) {
 	err = (&mac).UnmarshalText([]byte(s))
@@ -40,4 +45,24 @@ func (mac *MAC) UnmarshalText(s []byte) error {
 		return ErrInvalidMAC
 	}
 	return nil
+}
+
+func (mac MAC) String() string {
+	buf, _ := mac.MarshalText()
+	return unsafe.String(unsafe.SliceData(buf), 17)
+}
+
+func (mac MAC) MarshalText() (text []byte, err error) {
+	return mac.AppendText(make([]byte, 0, 17))
+}
+
+func (mac MAC) AppendText(buf []byte) ([]byte, error) {
+	for i := 5; i >= 0; i-- {
+		if i != 5 {
+			buf = append(buf, ':')
+		}
+		buf = append(buf, hexDigit[mac[i]>>4])
+		buf = append(buf, hexDigit[mac[i]&0xF])
+	}
+	return buf, nil
 }
