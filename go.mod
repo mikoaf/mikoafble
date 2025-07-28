@@ -1,5 +1,5 @@
 // module nbable
-module github.com/mikoaf/mikoafble/bluetooth
+module mikoafble
 
 go 1.24.4
 

@@ -1,4 +1,4 @@
-package nbable
+package bluetooth
 
 import (
 	"errors"
@@ -67,12 +67,12 @@ type Advertisement struct {
 }
 
 func (a *Adapter) DefaultAdvertisement() *Advertisement {
-	if a.defaulAdvertisement == nil {
-		a.defaulAdvertisement = &Advertisement{
+	if a.defaultAdvertisement == nil {
+		a.defaultAdvertisement = &Advertisement{
 			adapter: a,
 		}
 	}
-	return a.defaulAdvertisement
+	return a.defaultAdvertisement
 }
 
 func (a *Advertisement) Configure(options AdvertisementOptions) error {
@@ -89,21 +89,21 @@ func (a *Advertisement) Configure(options AdvertisementOptions) error {
 		serviceData[element.UUID.String()] = element.Data
 	}
 
-	manufactureData := map[uint16]any{}
+	manufacturerData := map[uint16]any{}
 	for _, element := range options.ManufacturerData {
-		manufactureData[element.CompanyID] = element.Data
+		manufacturerData[element.CompanyID] = element.Data
 	}
 
 	id := atomic.AddUint64(&advertisementID, 1)
-	a.path = dbus.ObjectPath(fmt.Sprintf("/nbable/advertisement%d", id))
+	a.path = dbus.ObjectPath(fmt.Sprintf("/org/tinygo/bluetooth/advertisement%d", id))
 	propsSpec := map[string]map[string]*prop.Prop{
 		"org.bluez.LEAdvertisement1": {
-			"Type":            {Value: "broadcast"},
-			"ServiceUUIDs":    {Value: serviceUUIDs},
-			"ManufactureData": {Value: manufactureData},
-			"LocalName":       {Value: options.LocalName},
-			"ServiceData":     {Value: serviceData, Writable: true},
-			"Timeout":         {Value: uint16(0)},
+			"Type":             {Value: "broadcast"},
+			"ServiceUUIDs":     {Value: serviceUUIDs},
+			"ManufacturerData": {Value: manufacturerData},
+			"LocalName":        {Value: options.LocalName},
+			"ServiceData":      {Value: serviceData, Writable: true},
+			"Timeout":          {Value: uint16(0)},
 		},
 	}
 
@@ -114,7 +114,7 @@ func (a *Advertisement) Configure(options AdvertisementOptions) error {
 	a.properties = props
 
 	if options.LocalName != "" {
-		call := a.adapter.adapter.Call("org.freedesktop.DBUS.Properties.Set", 0, "org.bluez.Adapter1", "Alias", dbus.MakeVariant((options.LocalName)))
+		call := a.adapter.adapter.Call("org.freedesktop.DBus.Properties.Set", 0, "org.bluez.Adapter1", "Alias", dbus.MakeVariant((options.LocalName)))
 		if call.Err != nil {
 			return fmt.Errorf("set adapter alias: %w", call.Err)
 		}
@@ -140,8 +140,6 @@ func (a *Advertisement) handleDBusSignals() {
 			case dbusSignalInterfacesAdded:
 				interfaces := sig.Body[dbusInterfacesAddedDictionary].(map[string]map[string]dbus.Variant)
 
-				// InterfacesAdded signal also contains all known properties so
-				// so we do not need to call org.freedesktop.DBus.Properties.GetAll
 				props, ok := interfaces[bluezDevice1Interface]
 				if !ok {
 					continue

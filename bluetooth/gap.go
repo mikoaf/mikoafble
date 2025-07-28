@@ -1,4 +1,4 @@
-package nbable
+package bluetooth
 
 type MACAddress struct {
 	MAC
