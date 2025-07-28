@@ -19,7 +19,7 @@ var adapter = bluetooth.DefaultAdapter
 
 var notifyChar bluetooth.Characteristic //notify characteristic
 
-var connectedDevices = make(map[bluetooth.Connection]bluetooth.Device)
+var connectedDevices = make(map[bluetooth.Address]bluetooth.Device)
 
 func callAPI(path string, payload interface{}) ([]byte, error) {
 	var resp *http.Response
@@ -44,6 +44,17 @@ func setupPeripheral() error {
 	if err != nil {
 		return err
 	}
+
+	//Connection handler
+	adapter.SetConnectionHandler(func(device bluetooth.Device, connected bool) {
+		if connected {
+			log.Printf("Device connected: %s\n", device.Address.String())
+			connectedDevices[device.Address] = device
+		} else {
+			log.Printf("Device disconnected: %s\n", device.Address)
+			delete(connectedDevices, device.Address)
+		}
+	})
 
 	// Write handler
 	writeHandler := func(conn bluetooth.Connection, offset int, value []byte) {
@@ -125,9 +136,9 @@ func setupPeripheral() error {
 
 	log.Println("Advertisement stopped")
 	log.Println("Disconnecting any active client connections...")
-	for connID, dev := range connectedDevices {
+	for addr, dev := range connectedDevices {
 		dev.Disconnect()
-		delete(connectedDevices, connID)
+		delete(connectedDevices, addr)
 	}
 	return nil
 }
