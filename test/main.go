@@ -12,7 +12,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"mikoafble/bluetooth"
+	"github.com/mikoaf/mikoafble/bluetooth"
 )
 
 var adapter = bluetooth.DefaultAdapter
