@@ -1,5 +1,5 @@
 // module nbable
-module mikoafble
+module github.com/mikoaf/mikoafble
 
 go 1.24.4
 
