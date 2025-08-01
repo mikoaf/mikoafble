@@ -12,7 +12,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"mikoafble/bluetooth"
+	"github.com/mikoaf/mikoafble/bluetooth"
 )
 
 var adapter = bluetooth.DefaultAdapter
@@ -117,6 +117,7 @@ func setupPeripheral() error {
 	// <-context.Background().Done()
 	// adv.Stop()
 
+	//context untuk cek keyboard interupt
 	ctx, cancel := context.WithCancel(context.Background())
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -127,6 +128,7 @@ func setupPeripheral() error {
 		cancel()
 	}()
 
+	//kalau done stop advertisement dan disconnect semua client
 	<-ctx.Done()
 	log.Println("Shutting down BLE services")
 	log.Println("Stopping advertisement...")
